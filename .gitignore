@@ -1,0 +1,28 @@
+# Material con derechos de terceros: no se versiona
+fuentes/
+Proyectos sugeridos*.pdf
+Syllabus-*.pdf
+
+# Compilación de LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+# Aplicación web (Vite + TypeScript)
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,199 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-noshorthands]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+% Citas autor-año (APA) con natbib; la bibliografía se escribe a mano en APA 7.
+\usepackage[round,authoryear]{natbib}
+\setlength{\bibsep}{2pt}
+
+\begin{document}
+
+\title{$e^{i\omega}$ a 8 bits: una herramienta web interactiva para aprender teoría de la información y sistemas de comunicación a través del sonido}
+
+\author{
+\IEEEauthorblockN{Daniel Alonso Gracia Pinto, Juan Camilo Vergara Tao, Andrew Nicolay Prieto Mendoza}
+\IEEEauthorblockA{Teoría de la Información y Sistemas de Comunicación --- Ingeniería de Sistemas y Computación\\
+Universidad Nacional de Colombia, Bogotá\\
+\{dagraciap, juvergarat, aprietome\}@unal.edu.co}
+}
+
+\maketitle
+
+\begin{abstract}
+Se propone el desarrollo de \emph{$e^{i\omega}$ a 8 bits}, una aplicación web interactiva que permite ver y escuchar, en tiempo real, el efecto de las operaciones matemáticas estudiadas en el curso sobre señales musicales. Cada módulo conecta una fórmula, desde los fasores hasta la modulación y la codificación de línea, con un experimento sonoro manipulable, bajo una estética retro de 8 bits. La herramienta se construirá con la Web Audio API, cada módulo se verificará matemáticamente y se deja planteado un protocolo de validación con estudiantes como trabajo futuro.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Transformada de Fourier, muestreo, PCM, Web Audio API, aprendizaje multimedia, descubrimiento guiado, chiptune.
+\end{IEEEkeywords}
+
+\section{Introducción}
+El curso de Teoría de la Información y Sistemas de Comunicación se apoya en un formalismo matemático denso: exponenciales complejas, Fourier, convolución, muestreo, cuantización y entropía \citep{lathi2019,haykin2009}. En la clase magistral estas herramientas suelen presentarse como fórmulas y gráficas estáticas, lo que dificulta construir una intuición sobre \emph{cómo} cada operación transforma una señal y \emph{para qué} se realiza. Por ejemplo, la condición de Nyquist $f_s \geq 2B$ se memoriza con facilidad, pero rara vez se \emph{oye} qué ocurre cuando se viola.
+
+El sonido puede cerrar esa brecha: armónicos, ancho de banda, aliasing y ruido de cuantización tienen una contraparte audible inmediata. Dos integrantes del grupo tienen relación cercana con la música (uno conoce a fondo el techno y otro toca la batería), lo que motiva usar ritmos, timbres y melodías reales como señales de prueba.
+
+La estética de 8 bits no es solo decorativa: el sonido \emph{chiptune} de las consolas clásicas es un referente cercano en Ingeniería de Sistemas \citep{collins2008} y es en sí mismo un ejemplo del curso: ondas cuadradas y triangulares (series de Fourier), muestreo bajo y cuantización de pocos bits (PCM). El nombre del proyecto resume esa idea: la exponencial compleja $e^{i\omega}$, base de todo el análisis espectral, representada con 8 bits.
+
+\section{Objetivos}
+\subsection{Objetivo general}
+Desarrollar una herramienta web interactiva que permita a los estudiantes del curso comprender de manera intuitiva los temas de la asignatura mediante la manipulación visual y auditiva de señales musicales, y relacionar esa experiencia con las fórmulas que la describen, su importancia y sus implicaciones.
+
+\subsection{Objetivos específicos}
+\begin{enumerate}
+\item Diseñar e implementar módulos interactivos que vinculen cada tema del curso con un experimento sonoro, mostrando simultáneamente la señal en el tiempo, su espectro y la ecuación correspondiente con sus parámetros en vivo.
+\item Implementar como módulo central la transformada de Fourier y la DFT, con un espectrograma en tiempo real de melodías sintetizadas, muestras de batería grabadas y la entrada del micrófono.
+\item Verificar matemáticamente cada módulo, contrastando sus resultados numéricos con soluciones analíticas y ejercicios resueltos de la bibliografía.
+\item Proponer un protocolo de validación pedagógica, basado en una prueba conceptual antes y después del uso, para aplicarse en futuras ediciones del curso.
+\end{enumerate}
+
+\section{Marco teórico}
+\subsection{Fundamentos de señales}
+Salvo que se indique otra fuente, esta subsección y la siguiente siguen la bibliografía del curso: \citet[caps.~2, 3, 5 y 6]{lathi2019}, \citet[caps.~1, 2 y 5]{hsu2003} y \citet[caps.~2 y 7]{haykin2009}.
+
+\emph{Números complejos y fasores.} La identidad de Euler, $e^{i\omega t} = \cos\omega t + i\sin\omega t$, representa una sinusoide como un vector que gira con velocidad angular $\omega$. Una nota pura real es la suma de dos fasores conjugados, $\cos\omega t=\tfrac{1}{2}(e^{i\omega t}+e^{-i\omega t})$, lo que explica las frecuencias negativas del espectro; en afinación temperada, la nota MIDI $m$ tiene frecuencia $f = 440 \cdot 2^{(m-69)/12}$~Hz, de modo que subir una octava duplica $\omega$.
+
+\emph{Series de Fourier.} Toda señal periódica de periodo $T_0$ admite la representación $x(t)=\sum_{n=-\infty}^{\infty} D_n e^{i n\omega_0 t}$, con $D_n = \frac{1}{T_0}\int_{T_0} x(t)e^{-in\omega_0 t}\,dt$ \citep[sec.~2.9]{lathi2019}. El timbre de un instrumento está determinado por los coeficientes $D_n$: la onda cuadrada de un \emph{chip} contiene solo armónicos impares con amplitud $\propto 1/n$, mientras la triangular decae como $1/n^2$.
+
+\emph{Transformada de Fourier y DFT.} Para señales aperiódicas, $X(\omega)=\int_{-\infty}^{\infty}x(t)e^{-i\omega t}dt$. En el computador se usa la DFT, $X_k=\sum_{n=0}^{N-1}x_n e^{-i2\pi kn/N}$, calculada con la FFT; su aplicación por ventanas cortas produce el espectrograma, que muestra cómo evoluciona el contenido frecuencial de una melodía.
+
+\emph{Sistemas lineales y filtros.} Un sistema LTI con respuesta al impulso $h(t)$ produce $y(t)=x(t)*h(t)$, equivalente a $Y(\omega)=H(\omega)X(\omega)$.
+
+\subsection{Transmisión digital de señales analógicas}
+\emph{Muestreo.} Una señal de banda limitada a $B$~Hz se reconstruye sin pérdida si $f_s \geq 2B$. Si no, una componente de frecuencia $f$ aparece como un alias en $|f - k f_s|$, lo que en música se oye como notas ``dobladas'' que no pertenecen a la melodía.
+
+\emph{PCM y cuantización.} Con un cuantizador uniforme de $n$ bits, la relación señal a ruido de cuantización para una sinusoide a escala completa es $\mathrm{SQNR}\approx 6.02\,n + 1.76$~dB \citep[prob.~5.16]{hsu2003}: cada bit añade unos 6~dB. Pasar de 16 a 8 y a 4 bits produce justamente el sonido característico de las consolas de 8 bits.
+
+\emph{Modulación delta y codificación de línea.} La modulación delta codifica con un bit la pendiente de la señal; si el escalón $\Delta$ es pequeño frente a $|\dot{x}(t)|/f_s$ aparece la sobrecarga de pendiente, audible en el golpe de un tambor. Los códigos de línea (NRZ, RZ, Manchester, AMI) se comparan por su densidad espectral de potencia y su componente DC \citep[sec.~5.10]{hsu2003}. \emph{Extensiones.} La entropía $H=-\sum p_i\log_2 p_i$ acota la longitud media de un código sin pérdidas, y la capacidad de un canal AWGN es $C=B\log_2(1+S/N)$ \citep{shannon1948}. Con ellas se puede medir la entropía de una melodía y escuchar el efecto de los códigos correctores sobre una canción transmitida por un canal ruidoso.
+
+\subsection{Fundamentos pedagógicos}
+El diseño se apoya en metaanálisis y experimentos controlados. Se aprende mejor cuando palabras e imágenes se presentan integradas en el espacio y en el tiempo y sin elementos irrelevantes \citep{mayer2020}: la ecuación con sus parámetros en vivo se ubica junto a su gráfica, y el sonido cambia en el mismo instante. Como el sonido es transitorio, los fragmentos serán cortos y repetibles, según el efecto de segmentación \citep{rey2019}. El descubrimiento sin guía rinde menos que la instrucción explícita, mientras que el guiado la supera \citep{alfieri2011}, y las simulaciones con andamiaje superan a las mismas sin él \citep{dangelo2014}. Por eso cada módulo incluye retos de predecir, observar y explicar, con retroalimentación que explica la causa, que es la más eficaz en entornos digitales \citep{vanderkleij2015}. Todo esto se enmarca en el aprendizaje activo, que mejora el rendimiento en STEM \citep{freeman2014}.
+
+\emph{Narrativa acumulativa.} Recuperar lo aprendido es más eficaz que volver a estudiarlo \citep{adesope2017}. Por eso cada módulo abre con una pregunta sobre una intuición del anterior, y una misma pieza musical recorre todos los módulos como si fuera una cadena de comunicación.
+
+\emph{Estética sin gamificación.} El diseño emocional (por ejemplo, colores agradables) mejora la comprensión \citep{brom2018}, pero los detalles atractivos e irrelevantes la empeoran \citep{sundararajan2020}. Por eso la estética 8-bit se aplica solo a los elementos que enseñan. No se usarán puntos, insignias ni niveles: las recompensas externas esperadas reducen la motivación intrínseca \citep{deci1999}, y la meta debe ser el contenido, no el juego.
+
+\emph{Concepciones erróneas.} Cada analogía musical se revisará contra los errores conceptuales documentados por \citet{wage2005}. Por ejemplo, una nota real corresponde a un par de fasores conjugados, no a uno solo, y la altura percibida crece con el logaritmo de la frecuencia.
+
+\subsection{Trabajos relacionados}
+Existen recursos visuales destacados, como la simulación \emph{Fourier: Making Waves} de PhET \citep{phet} y el espectrograma de Chrome Music Lab \citep{chromemusiclab}. \citet{muller2021} muestran cómo la música hace concreto el análisis de Fourier. Sin embargo, cada uno de estos trabajos cubre un tema aislado. La propuesta integra la secuencia completa del curso con la música como hilo conductor y la fórmula siempre junto al resultado audible.
+
+\section{Metodología}
+\subsection{Arquitectura y tecnologías}
+La herramienta será un sitio web estático, sin servidor, organizado como un LMS por módulos. El progreso y la señal propia del estudiante se guardan en el almacenamiento local del navegador, para que su función lo acompañe de un módulo al siguiente. El procesamiento de audio se hará con la Web Audio API \citep{w3c2021}: osciladores y nodos de filtro nativos para la síntesis, y \emph{AudioWorklets} para las operaciones propias (submuestreo sin filtro antialiasing, cuantización a $n$ bits, modulación delta), de modo que el estudiante escuche exactamente el algoritmo implementado y no una aproximación del navegador. Las gráficas de tiempo, espectro y fasores se dibujarán en Canvas. Para equilibrar la interactividad con la mantenibilidad, se usará TypeScript con una arquitectura modular: un núcleo de procesamiento de señales independiente de la interfaz y probado por separado, y cada tema como un módulo autocontenido con la misma estructura (señal de entrada, controles, visualizaciones y ecuación en vivo).
+
+Las señales de entrada serán sonidos sintetizados al estilo de consolas de 8 bits, muestras reales de batería grabadas por el grupo, canciones libres de derechos de autor y la entrada del micrófono. El micrófono se procesa localmente: no se graba ni se envía nada.
+
+\emph{Restricción auditiva.} Los experimentos se diseñarán dentro del rango audible, normalizado para oyentes de 18 a 25 años \citep{iso226,suzuki2004}. Si un estudiante propone una función, la aplicación analiza su espectro y declara si no es audible (infrasonido, ultrasonido o nivel insuficiente) o si superará el Nyquist del dispositivo y se oirá plegada; aun así, muestra sus gráficas y el efecto de cada operación.
+
+\subsection{Módulos}
+La Tabla~\ref{tab:modulos} resume los módulos. El alcance comprometido va de los complejos a la codificación de línea (capítulos II y III); los capítulos IV y V son extensiones.
+
+\begin{table}[!t]
+\caption{Módulos de la herramienta y experimento sonoro asociado}
+\label{tab:modulos}
+\centering
+\footnotesize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.33\columnwidth}>{\raggedright\arraybackslash}p{0.58\columnwidth}@{}}
+\toprule
+\textbf{Módulo} & \textbf{Experimento sonoro} \\
+\midrule
+Complejos y fasores & Fasor giratorio cuya frecuencia es una nota; sumar fasores forma acordes. \\
+Series de Fourier & Construir timbres (cuadrada, triangular, sierra) armónico por armónico. \\
+Transformada y DFT$^\ast$ & Espectrograma en vivo de melodías, batería y micrófono. \\
+Sistemas LTI y filtros & Ecualizador y pasa bajas ideal y práctico sobre la pieza. \\
+Muestreo y aliasing & Reducir $f_s$ y oír las notas ``dobladas''. \\
+PCM y cuantización & Reducir de 16 a 4 bits y oír el ruido de cuantización. \\
+Modulación delta & Sobrecarga de pendiente en el ataque de un tambor. \\
+Codificación de línea & Patrones rítmicos como trenes de pulsos NRZ, RZ y Manchester. \\
+\bottomrule
+\multicolumn{2}{@{}l}{\scriptsize $^\ast$Módulo central de la demostración.}
+\end{tabular}
+\end{table}
+
+\subsection{Organización del equipo y cronograma}
+Daniel Gracia dirige la concepción y la implementación; Juan Camilo Vergara, el marco teórico y el artículo; Andrew Prieto, la verificación de calidad, el protocolo de validación y la grabación de batería. El desarrollo durará unas tres semanas: en la primera, el núcleo de procesamiento y los módulos de complejos, series y transformada; en la segunda, filtros, muestreo, PCM, modulación delta, codificación de línea y la grabación de muestras; en la tercera, la verificación, el protocolo de validación, los módulos extendidos si el tiempo lo permite y el artículo.
+
+\subsection{Verificación y evaluación}
+Cada módulo se verificará contrastando sus resultados con ejemplos conocidos: soluciones analíticas (coeficientes de una onda cuadrada, frecuencia alias, SQNR teórica) y ejercicios resueltos de \citet{hsu2003} y \citet{lathi2019}. Como el curso termina antes de poder probar la herramienta con estudiantes, la validación pedagógica queda como trabajo futuro: una prueba antes y después del uso con ítems del \emph{Signals and Systems Concept Inventory} \citep{wage2005}, que mida la ganancia de aprendizaje y no la percepción.
+
+\section*{Declaración de uso de inteligencia artificial}
+Se usó Claude (Anthropic) para redactar el borrador a partir de las decisiones del grupo, buscar y filtrar referencias y ubicar los temas en los libros del curso. Las citas se contrastaron con los textos originales o, si no estaban disponibles, con resúmenes y catálogos; las fórmulas y capítulos, con los libros. El grupo revisó y aprobó la versión final.
+
+\renewcommand{\bibfont}{\footnotesize}
+\begin{thebibliography}{99}
+
+\bibitem[Adesope et~al.(2017)]{adesope2017}
+Adesope, O. O., Trevisan, D. A., y Sundararajan, N. (2017). Rethinking the use of tests: A meta-analysis of practice testing. \emph{Review of Educational Research, 87}(3), 659--701. \url{https://doi.org/10.3102/0034654316689306}
+
+\bibitem[Alfieri et~al.(2011)]{alfieri2011}
+Alfieri, L., Brooks, P. J., Aldrich, N. J., y Tenenbaum, H. R. (2011). Does discovery-based instruction enhance learning? \emph{Journal of Educational Psychology, 103}(1), 1--18. \url{https://doi.org/10.1037/a0021017}
+
+\bibitem[Brom et~al.(2018)]{brom2018}
+Brom, C., Stárková, T., y D'Mello, S. K. (2018). How effective is emotional design? A meta-analysis on facial anthropomorphisms and pleasant colors during multimedia learning. \emph{Educational Research Review, 25}, Artículo 100119. \url{https://doi.org/10.1016/j.edurev.2018.09.004}
+
+\bibitem[Collins(2008)]{collins2008}
+Collins, K. (2008). \emph{Game sound: An introduction to the history, theory, and practice of video game music and sound design}. MIT Press.
+
+\bibitem[D'Angelo et~al.(2014)]{dangelo2014}
+D'Angelo, C., Rutstein, D., Harris, C., Bernard, R., Borokhovski, E., y Haertel, G. (2014). \emph{Simulations for STEM learning: Systematic review and meta-analysis}. SRI International.
+
+\bibitem[Deci et~al.(1999)]{deci1999}
+Deci, E. L., Koestner, R., y Ryan, R. M. (1999). A meta-analytic review of experiments examining the effects of extrinsic rewards on intrinsic motivation. \emph{Psychological Bulletin, 125}(6), 627--668. \url{https://doi.org/10.1037/0033-2909.125.6.627}
+
+\bibitem[Freeman et~al.(2014)]{freeman2014}
+Freeman, S., Eddy, S. L., McDonough, M., Smith, M. K., Okoroafor, N., Jordt, H., y Wenderoth, M. P. (2014). Active learning increases student performance in science, engineering, and mathematics. \emph{Proceedings of the National Academy of Sciences, 111}(23), 8410--8415. \url{https://doi.org/10.1073/pnas.1319030111}
+
+\bibitem[Google Creative Lab(2016)]{chromemusiclab}
+Google Creative Lab. (2016). \emph{Chrome Music Lab: Spectrogram}. \url{https://musiclab.chromeexperiments.com/Spectrogram/}
+
+\bibitem[Haykin y Moher(2009)]{haykin2009}
+Haykin, S., y Moher, M. (2009). \emph{Communication systems} (5.ª ed.). John Wiley \& Sons.
+
+\bibitem[Hsu(2003)]{hsu2003}
+Hsu, H. P. (2003). \emph{Schaum's outline of theory and problems of analog and digital communications} (2.ª ed.). McGraw-Hill.
+
+\bibitem[ISO(2023)]{iso226}
+International Organization for Standardization. (2023). \emph{Acoustics --- Normal equal-loudness-level contours} (ISO Standard No. 226:2023).
+
+\bibitem[Lathi y Ding(2019)]{lathi2019}
+Lathi, B. P., y Ding, Z. (2019). \emph{Modern digital and analog communication systems} (5.ª ed.). Oxford University Press.
+
+\bibitem[Mayer(2020)]{mayer2020}
+Mayer, R. E. (2020). \emph{Multimedia learning} (3.ª ed.). Cambridge University Press.
+
+\bibitem[Müller et~al.(2021)]{muller2021}
+Müller, M., McFee, B., y Kinnaird, K. M. (2021). Interactive learning of signal processing through music: Making Fourier analysis concrete for students. \emph{IEEE Signal Processing Magazine, 38}(3), 73--84.
+
+\bibitem[PhET Interactive Simulations(s.f.)]{phet}
+PhET Interactive Simulations. (s.f.). \emph{Fourier: Making waves}. University of Colorado Boulder. \url{https://phet.colorado.edu/en/simulations/fourier-making-waves}
+
+\bibitem[Rey et~al.(2019)]{rey2019}
+Rey, G. D., Beege, M., Nebel, S., Wirzberger, M., Schmitt, T. H., y Schneider, S. (2019). A meta-analysis of the segmenting effect. \emph{Educational Psychology Review, 31}, 389--419. \url{https://doi.org/10.1007/s10648-018-9456-4}
+
+\bibitem[Shannon(1948)]{shannon1948}
+Shannon, C. E. (1948). A mathematical theory of communication. \emph{The Bell System Technical Journal, 27}(3), 379--423. \url{https://doi.org/10.1002/j.1538-7305.1948.tb01338.x}
+
+\bibitem[Sundararajan y Adesope(2020)]{sundararajan2020}
+Sundararajan, N., y Adesope, O. (2020). Keep it coherent: A meta-analysis of the seductive details effect. \emph{Educational Psychology Review, 32}(3), 707--734. \url{https://doi.org/10.1007/s10648-020-09522-4}
+
+\bibitem[Suzuki y Takeshima(2004)]{suzuki2004}
+Suzuki, Y., y Takeshima, H. (2004). Equal-loudness-level contours for pure tones. \emph{The Journal of the Acoustical Society of America, 116}(2), 918--933. \url{https://doi.org/10.1121/1.1763601}
+
+\bibitem[Van der Kleij et~al.(2015)]{vanderkleij2015}
+Van der Kleij, F. M., Feskens, R. C. W., y Eggen, T. J. H. M. (2015). Effects of feedback in a computer-based learning environment on students' learning outcomes: A meta-analysis. \emph{Review of Educational Research, 85}(4), 475--511. \url{https://doi.org/10.3102/0034654314564881}
+
+\bibitem[Wage et~al.(2005)]{wage2005}
+Wage, K. E., Buck, J. R., Wright, C. H. G., y Welch, T. B. (2005). The Signals and Systems Concept Inventory. \emph{IEEE Transactions on Education, 48}(3), 448--461. \url{https://doi.org/10.1109/TE.2005.849746}
+
+\bibitem[W3C(2021)]{w3c2021}
+World Wide Web Consortium. (2021). \emph{Web Audio API} [Recomendación W3C]. \url{https://www.w3.org/TR/webaudio/}
+
+\end{thebibliography}
+
+\end{document}
