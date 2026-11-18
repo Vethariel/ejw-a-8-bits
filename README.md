@@ -1,4 +1,4 @@
-# e^iω a 8 bits
+# e^jω a 8 bits
 
 Herramienta web interactiva para aprender **teoría de la información y sistemas de comunicación** a través del sonido. Cada módulo conecta una fórmula del curso con un experimento sonoro que se puede manipular, con estética chiptune de 8 bits: ves la señal, su espectro y la ecuación, y oyes en el mismo instante lo que cada operación le hace a la música.
 

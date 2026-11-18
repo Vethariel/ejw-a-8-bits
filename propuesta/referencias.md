@@ -1,4 +1,4 @@
-# Referencias — e^iω a 8 bits
+# Referencias — e^jω a 8 bits
 
 *Documento de trabajo, en iteración. Última revisión: 15 de noviembre de 2026.*
 
@@ -87,7 +87,7 @@
 
 | Analogía | Riesgo | Cómo se evita |
 |---|---|---|
-| "Una nota es un fasor" | Una señal real es la suma de dos fasores conjugados; si se omite, luego confunden las frecuencias negativas del espectro. | Mostrar el par e^{iωt} y e^{−iωt}, y su suma real. |
+| "Una nota es un fasor" | Una señal real es la suma de dos fasores conjugados; si se omite, luego confunden las frecuencias negativas del espectro. | Mostrar el par e^{jωt} y e^{−jωt}, y su suma real. |
 | Altura y frecuencia | Oímos la altura de forma logarítmica (octava = ×2), pero el espectro suele graficarse lineal. | Ofrecer el eje de frecuencia en escala logarítmica y marcar las notas. |
 | "El timbre son los armónicos" | La envolvente (por ejemplo, el ataque del tambor) también define el timbre. | Separar explícitamente armónicos y envolvente en el módulo de series. |
 

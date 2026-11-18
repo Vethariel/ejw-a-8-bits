@@ -1,4 +1,4 @@
-# Registro de uso de IA — e^iω a 8 bits
+# Registro de uso de IA — e^jω a 8 bits
 
 Este registro alimenta la declaración obligatoria del artículo final. Va antes de las referencias y debe decir qué herramientas se usaron, para qué partes y cómo verificó el grupo lo generado. Agreguen una fila cada vez que usen IA.
 

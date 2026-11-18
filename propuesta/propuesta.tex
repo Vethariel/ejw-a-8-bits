@@ -14,7 +14,7 @@
 
 \begin{document}
 
-\title{$e^{i\omega}$ a 8 bits: una herramienta web interactiva para aprender teoría de la información y sistemas de comunicación a través del sonido}
+\title{$e^{j\omega}$ a 8 bits: una herramienta web interactiva para aprender teoría de la información y sistemas de comunicación a través del sonido}
 
 \author{
 \IEEEauthorblockN{Daniel Alonso Gracia Pinto, Juan Camilo Vergara Tao, Andrew Nicolay Prieto Mendoza}
@@ -26,7 +26,7 @@ Universidad Nacional de Colombia, Bogotá\\
 \maketitle
 
 \begin{abstract}
-Se propone el desarrollo de \emph{$e^{i\omega}$ a 8 bits}, una aplicación web interactiva que permite ver y escuchar, en tiempo real, el efecto de las operaciones matemáticas estudiadas en el curso sobre señales musicales. Cada módulo conecta una fórmula, desde los fasores hasta la modulación y la codificación de línea, con un experimento sonoro manipulable, bajo una estética retro de 8 bits. La herramienta se construirá con la Web Audio API, cada módulo se verificará matemáticamente y se deja planteado un protocolo de validación con estudiantes como trabajo futuro.
+Se propone el desarrollo de \emph{$e^{j\omega}$ a 8 bits}, una aplicación web interactiva que permite ver y escuchar, en tiempo real, el efecto de las operaciones matemáticas estudiadas en el curso sobre señales musicales. Cada módulo conecta una fórmula, desde los fasores hasta la modulación y la codificación de línea, con un experimento sonoro manipulable, bajo una estética retro de 8 bits. La herramienta se construirá con la Web Audio API, cada módulo se verificará matemáticamente y se deja planteado un protocolo de validación con estudiantes como trabajo futuro.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -38,7 +38,7 @@ El curso de Teoría de la Información y Sistemas de Comunicación se apoya en u
 
 El sonido puede cerrar esa brecha: armónicos, ancho de banda, aliasing y ruido de cuantización tienen una contraparte audible inmediata. Dos integrantes del grupo tienen relación cercana con la música (uno conoce a fondo el techno y otro toca la batería), lo que motiva usar ritmos, timbres y melodías reales como señales de prueba.
 
-La estética de 8 bits no es solo decorativa: el sonido \emph{chiptune} de las consolas clásicas es un referente cercano en Ingeniería de Sistemas \citep{collins2008} y es en sí mismo un ejemplo del curso: ondas cuadradas y triangulares (series de Fourier), muestreo bajo y cuantización de pocos bits (PCM). El nombre del proyecto resume esa idea: la exponencial compleja $e^{i\omega}$, base de todo el análisis espectral, representada con 8 bits.
+La estética de 8 bits no es solo decorativa: el sonido \emph{chiptune} de las consolas clásicas es un referente cercano en Ingeniería de Sistemas \citep{collins2008} y es en sí mismo un ejemplo del curso: ondas cuadradas y triangulares (series de Fourier), muestreo bajo y cuantización de pocos bits (PCM). El nombre del proyecto resume esa idea: la exponencial compleja $e^{j\omega}$, base de todo el análisis espectral, representada con 8 bits.
 
 \section{Objetivos}
 \subsection{Objetivo general}
@@ -56,11 +56,11 @@ Desarrollar una herramienta web interactiva que permita a los estudiantes del cu
 \subsection{Fundamentos de señales}
 Salvo que se indique otra fuente, esta subsección y la siguiente siguen la bibliografía del curso: \citet[caps.~2, 3, 5 y 6]{lathi2019}, \citet[caps.~1, 2 y 5]{hsu2003} y \citet[caps.~2 y 7]{haykin2009}.
 
-\emph{Números complejos y fasores.} La identidad de Euler, $e^{i\omega t} = \cos\omega t + i\sin\omega t$, representa una sinusoide como un vector que gira con velocidad angular $\omega$. Una nota pura real es la suma de dos fasores conjugados, $\cos\omega t=\tfrac{1}{2}(e^{i\omega t}+e^{-i\omega t})$, lo que explica las frecuencias negativas del espectro; en afinación temperada, la nota MIDI $m$ tiene frecuencia $f = 440 \cdot 2^{(m-69)/12}$~Hz, de modo que subir una octava duplica $\omega$.
+\emph{Números complejos y fasores.} La identidad de Euler, $e^{j\omega t} = \cos\omega t + j\sin\omega t$, representa una sinusoide como un vector que gira con velocidad angular $\omega$. Una nota pura real es la suma de dos fasores conjugados, $\cos\omega t=\tfrac{1}{2}(e^{j\omega t}+e^{-j\omega t})$, lo que explica las frecuencias negativas del espectro; en afinación temperada, la nota MIDI $m$ tiene frecuencia $f = 440 \cdot 2^{(m-69)/12}$~Hz, de modo que subir una octava duplica $\omega$.
 
-\emph{Series de Fourier.} Toda señal periódica de periodo $T_0$ admite la representación $x(t)=\sum_{n=-\infty}^{\infty} D_n e^{i n\omega_0 t}$, con $D_n = \frac{1}{T_0}\int_{T_0} x(t)e^{-in\omega_0 t}\,dt$ \citep[sec.~2.9]{lathi2019}. El timbre de un instrumento está determinado por los coeficientes $D_n$: la onda cuadrada de un \emph{chip} contiene solo armónicos impares con amplitud $\propto 1/n$, mientras la triangular decae como $1/n^2$.
+\emph{Series de Fourier.} Toda señal periódica de periodo $T_0$ admite la representación $x(t)=\sum_{n=-\infty}^{\infty} D_n e^{j n\omega_0 t}$, con $D_n = \frac{1}{T_0}\int_{T_0} x(t)e^{-jn\omega_0 t}\,dt$ \citep[sec.~2.9]{lathi2019}. El timbre de un instrumento está determinado por los coeficientes $D_n$: la onda cuadrada de un \emph{chip} contiene solo armónicos impares con amplitud $\propto 1/n$, mientras la triangular decae como $1/n^2$.
 
-\emph{Transformada de Fourier y DFT.} Para señales aperiódicas, $X(\omega)=\int_{-\infty}^{\infty}x(t)e^{-i\omega t}dt$. En el computador se usa la DFT, $X_k=\sum_{n=0}^{N-1}x_n e^{-i2\pi kn/N}$, calculada con la FFT; su aplicación por ventanas cortas produce el espectrograma, que muestra cómo evoluciona el contenido frecuencial de una melodía.
+\emph{Transformada de Fourier y DFT.} Para señales aperiódicas, $X(\omega)=\int_{-\infty}^{\infty}x(t)e^{-j\omega t}dt$. En el computador se usa la DFT, $X_k=\sum_{n=0}^{N-1}x_n e^{-j2\pi kn/N}$, calculada con la FFT; su aplicación por ventanas cortas produce el espectrograma, que muestra cómo evoluciona el contenido frecuencial de una melodía.
 
 \emph{Sistemas lineales y filtros.} Un sistema LTI con respuesta al impulso $h(t)$ produce $y(t)=x(t)*h(t)$, equivalente a $Y(\omega)=H(\omega)X(\omega)$.
 
